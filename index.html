@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+
+<!-- Head -->
+
+<html lang="en">
+    <head>
+        <title>USGS Data Visualization</title>
+        <meta charset="utf-8">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+<!--         <script src="USGSVisualizeSkeleton.js" type="text/javascript">
+        </script> -->
+        <!-- Datatables (Primarily used for search function on layer control) -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.18/sl-1.2.6/datatables.min.css"/>
+        <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.18/sl-1.2.6/datatables.min.js"></script>
+<!--         <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/dataTables.jqueryui.min.js"></script> -->
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"/>
+        <!-- Bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+        <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+        <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js">
+        </script>
+        <!-- Datatable css -->
+        <link href="css/dataTables.bootstrap.min.css" rel="stylesheet">
+        <!-- Latest Sortable
+        NOT WORKING!!!
+         -->
+        <script src="http://rubaxa.github.io/Sortable/Sortable.js"></script>
+<!-- Style for modal popups and sliders: https://www.w3schools.com -->
+        <style>
+        body {background-color: rgb(0, 0, 0);
+            font-family: Arial, Helvetica, sans-serif;}
+
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /* The slider itself */
+        .slider {
+            -webkit-appearance: none;  /* Override default CSS styles */
+            appearance: none;
+            width: 100%; /* Full-width */
+            height: 15px; /* Specified height */
+            background: rgb(100, 100, 100); /* Grey background */
+            outline: none; /* Remove outline */
+            opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+            -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+            transition: opacity .2s;
+        }
+
+        /* Mouse-over effects */
+        .slider:hover {
+            opacity: 1; /* Fully shown on mouse-over */
+        }
+
+        /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */ 
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Override default look */
+            appearance: none;
+            width: 15px; /* Set a specific slider handle width */
+            height: 15px; /* Slider handle height */
+            background: rgba(183, 28, 28, 0.6); /* Green background */
+            cursor: pointer; /* Cursor on hover */
+            border-radius: 5px;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #4CAF50; /* Green background */
+            cursor: pointer; /* Cursor on hover */
+        }
+        .loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #a00303; /* Sanguine */
+            border-radius: 50%;
+            width: 75px;
+            height: 75px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        </style>
+    </head>
+
+<!-- The Modals -->
+
+    <div id="myModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <p id="modalText">Some text in the Modal..</p>
+      </div>
+    </div>
+<!-- BODY -->
+    <body>
+        <center style="color: white; position: fixed; z-index: 102; width: 100%; background: rgba(0, 0, 0, 0.5);"><h1>USGS Data Visualization</h1></center>
+        <div class="container">
+                <div id="globe">
+                    <canvas id="canvasOne" width="1920" height="1080"
+                            style="position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100, background-color: black">
+                        Your browser does not support HTML5 Canvas.
+                    </canvas>
+                    <script 
+                    src="https://files.worldwind.arc.nasa.gov/artifactory/web/0.9.0/worldwind.min.js"
+                    type="text/javascript"></script>
+                    <script src="USGSVisualizeSkeleton.js" type="text/javascript">
+                    </script>
+                </div>
+            </div>
+        </div>
+        <ul class="tab" id="selectionMenu"
+            style="z-index: 103; position: relative; background: transparent; overflow: visible; margin-top: 20px">
+            <li class="btn" id="controlButton" align="left" style="background-color: rgba(0, 0, 0, 0.5); color: white; position: relative; font-size: 1.2vw; font-weight: bold; border-color: white; margin-left: -30px">
+                Layer Control
+            </li>
+            <li class="btn" id="retrievalButton" style="background-color: rgba(0, 0, 0, 0.5); color: white; font-size: 1.2vw; font-weight: bold; border-color: white;">
+                Retrieve Layers
+            </li>
+            <li class="btn" id="identifyButton" style="background-color: rgba(0, 0, 0, 0.5); color: white; position: relative; font-size: 1.2vw; font-weight: bold; border-color: white;">
+                Identify Legends
+            </li>
+            <li class="btn pull-right" id="tutorialButton" style="background-color: rgba(0, 0, 0, 0.5); color: white; position: relative; font-size: 1.2vw; font-weight: bold; border-color: white; margin-right: 10px">
+                Tutorial
+            </li>
+        </ul>
+        <div class="col-sm-3" id="layerControlCol" style="background-color: rgb(0, 0, 0, 0.5); min-height: 150px; max-height: 600px; margin-left: 3px; display: none; text-align: center; font-weight: bold; color: white; width:auto">
+            <!-- <h4>Layer List</h4> -->
+            <table class="table" id="layerControl" style="overflow-y: scroll; height: auto; min-height: 150px; max-height: 550px; margin-bottom: 5px; border-color: rgba(0,0,0,0)"></table>
+        </div>
+        <div class="col-sm-3" id="retrievalControlCol" style="background-color: rgb(0, 0, 0, 0.5); min-height: 150px; max-height: 600px; margin-left: 3px; display: none; text-align: center; font-weight: bold; color: white">
+            <h4>Retrieval</h4>
+            <div id="retrievalControl" style="overflow-y: scroll; height: auto; min-height: 150px; max-height: 550px; margin-bottom: 15px"></div>
+            <div class="loader" id="retrievalLoader" style="position: relative; display: none; margin-bottom: 1em"></div>
+        </div>
+        <div class="col-sm-4 pull-right" id="identifyCol" style="background-color: rgb(0, 0, 0, 0.5); min-height: 150px; max-height: 90vh; width: auto; max-width: 550px; margin-right: 3px; margin-bottom: auto; display: none; text-align: center; font-weight: bold; color: white; overflow-y: scroll;">
+            <h4>Legends for WMS Layers</h4>
+            <div id="identifyControl" style="overflow-y: hidden; height: auto; margin-bottom: 15px; padding-left: 0">Please Select Layers to Display Legends</div>
+        </div>
+        <script>
+            // Menu Button Functionality
+            var retrieval = document.getElementById('retrievalButton');
+            var control = document.getElementById('controlButton');
+            var identify = document.getElementById('identifyButton');
+            var tutorial = document.getElementById('tutorialButton');
+            retrieval.onclick = function () {
+                if (document.getElementById("layerControlCol").style.display === "block") {
+                    control.click();
+                }
+                var temp = document.getElementById("retrievalControlCol");
+                document.getElementById("retrievalControlCol").style.display = ((temp.style.display === 'none' ? 'block' : 'none'));
+                retrieval.style.backgroundColor = (retrievalButton.style.backgroundColor === "rgba(0, 0, 0, 0.5)") ? "rgba(183, 28, 28, 0.6)" : "rgba(0, 0, 0, 0.5)";
+            };
+            control.onclick = function () {
+                if (document.getElementById("retrievalControlCol").style.display === "block") {
+                    retrieval.click();
+                }
+                var temp = document.getElementById("layerControlCol");
+                document.getElementById("layerControlCol").style.display = ((temp.style.display === 'none' ? 'block' : 'none'));
+                control.style.backgroundColor = (control.style.backgroundColor === "rgba(0, 0, 0, 0.5)") ? "rgba(183, 28, 28, 0.6)" : "rgba(0, 0, 0, 0.5)";
+            };
+            identify.onclick = function () {
+                var temp = document.getElementById("identifyCol");
+                document.getElementById("identifyCol").style.display = ((temp.style.display === 'none' ? 'block' : 'none'));
+                identify.style.backgroundColor = (identify.style.backgroundColor === "rgba(0, 0, 0, 0.5)") ? "rgba(183, 28, 28, 0.6)" : "rgba(0, 0, 0, 0.5)";
+            };
+            var tutorialText = "<h><b>Layer Control:</b><h><br>Contains a list of all layers that are currently on the globe. Functionality includes toggling layer visibility and opacity and accessing metadata.<br><br><h><b>Retrieve Layers:</b><h><br>Allows you to access layers that are available, but are not yet on the globe.<br><br><h><b>Identify Legends:</b><h><br>Lists the legends for the WMS and WMST layers that come from the Retrieve Layers menu.<br><br><h><b>*Double Clicking*:</b><h><br>Performs a preset zoom into the clicked region. If double-clicked over Anson Data, the zoom is accompanied with some information.<br><br><h><b>Controls (Lower Left):</b><h><br>Built-in NASA WorldWind controls for navigating the globe.<br>"
+            tutorial.onclick = function () {
+                tutorial.style.backgroundColor = "rgba(183, 28, 28, 0.6)";
+                var modal = document.getElementById('myModal');
+                var modalText = tutorialText;
+                document.getElementById("modalText").innerHTML = modalText;
+                var closer = document.getElementsByClassName("close")[0];
+                modal.style.display = "block";
+                closer.onclick = function() {
+                    tutorial.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+                    modal.style.display = "none";
+                }
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        tutorial.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+                        modal.style.display = "none";
+                    }
+                }
+            }
+            // New layers from Anson's csv: https://github.com/Anson-Zhao/AWB_CS_KO/blob/master/CitySmart/Layer_Files/Layer_csv/Master.csv
+            // Based off: https://stackoverflow.com/questions/14446447/how-to-read-a-local-text-file
+            function readAnsonTextFile(file)
+            {
+                var rawFile = new XMLHttpRequest();
+                rawFile.open("GET", file, false);
+                rawFile.onreadystatechange = function ()
+                {
+                    if(rawFile.readyState === 4)
+                    {
+                        if(rawFile.status === 200 || rawFile.status == 0)
+                        {
+                            var allText = rawFile.responseText;
+                            var lines = allText.split("\n");
+                            //instead of alerting, I want to convert it to a line by line basis
+                            // alert(lines[1].toString().split(",")[7])
+                            var i;
+                            var placemarkLayer = new WorldWind.RenderableLayer();
+                            placemarkLayer.displayName = "Anson Data"
+                            for (i = 1; i < lines.length; i++) {
+                                makeAnsonLayers(lines[i], placemarkLayer);
+                            }
+                            layers.push({layer: placemarkLayer, enabled: false});
+                            placemarkLayer.enabled = false;
+                            wwd.addLayer(placemarkLayer);
+                        }
+                    }
+                }
+                rawFile.send(null);
+            }
+            readAnsonTextFile("AnsonData.txt");
+            // https://github.com/NASAWorldWind/WebWorldWind/blob/develop/examples/PickAllShapesInRegion.js
+
+            var highlightedItems = [];
+
+            function constructModalText(pos, file) {
+                var i;
+                var rawFile = new XMLHttpRequest();
+                rawFile.open("GET", file, false);
+                var retText = "empty";
+                var place1 = wwd.pick(wwd.canvasCoordinates(pos.latitude, pos.longitude));
+                rawFile.onload = function ()
+                {
+                    if(rawFile.readyState === 4)
+                    {
+                        if(rawFile.status === 200 || rawFile.status == 0)
+                        {
+                            var allText = rawFile.responseText;
+                            var lines = allText.split("\n");
+                            for (i = 0; i < layers[7].layer.renderables.length; i++) {
+                                place2 = layers[7].layer.renderables[i];
+                                pos2 = place2.position;
+                                if ((pos.latitude === pos2.latitude) && (pos.longitude === pos2.longitude)) {
+                                    line = lines[i + 1].split("|");
+                                    retText = "Location: " + line[0] + "<br>\nName: " + line[1].slice(1) + "<br>\nDescription: " + line[2].slice(1);
+                                }
+                            }
+                        }
+                    }
+                }
+                rawFile.send(null);
+                return retText;
+            }
+
+            // https://github.com/NASAWorldWind/WebWorldWind/blob/develop/examples/PickAllShapesInRegion.js
+            var handlePick = function (o) {
+                // The input argument is either an Event or a TapRecognizer. Both have the same properties for determining
+                // the mouse or tap location.
+                var x = o.clientX,
+                    y = o.clientY;
+                if (x < 200 & y > 730) {return}
+                var redrawRequired = highlightedItems.length > 0;
+
+                // De-highlight any highlighted placemarks.
+                for (var h = 0; h < highlightedItems.length; h++) {
+                    highlightedItems[h].highlighted = false;
+                }
+                highlightedItems = [];
+                var pickPoint = wwd.canvasCoordinates(x, y);
+                var pickList = wwd.pick(pickPoint);
+                if (pickList.objects.length > 0) {
+                    redrawRequired = true;
+                }
+                // Highlight the items picked.
+                if (pickList.objects.length > 1) {
+                    for (var p = 0; p < pickList.objects.length; p++) {
+                        if (!pickList.objects[p].isTerrain) {
+                            var position = pickList.objects[0].position;
+                            wwd.goTo(new WorldWind.Position(position.latitude, position.longitude, 10e5));
+                            var modal = document.getElementById('myModal');
+                            var modalText = constructModalText(position, "AnsonData.txt");
+                            document.getElementById("modalText").innerHTML = modalText;
+                            var closer = document.getElementsByClassName("close")[0];
+                            modal.style.display = "block";
+                            closer.onclick = function() {
+                                modal.style.display = "none";
+                            }
+                            window.onclick = function(event) {
+                                if (event.target == modal) {
+                                    modal.style.display = "none";
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    var position = pickList.objects[0].position
+                    var newPos = new WorldWind.Position(position.latitude, position.longitude, 10e5*1.2);
+                    wwd.goTo(newPos);
+                    redrawRequired = true;
+                }
+
+                // Update the window if we changed anything.
+                wwd.redraw()
+            };
+
+
+            // Listen for mouse moves and highlight the placemarks that the cursor rolls over.
+            wwd.addEventListener("dblclick", handlePick);
+
+            // Metadata below... It's much easier and seemingly more efficient to store the urls and access the data upon request instead of shoving all the data into the app upon launch.
+
+            var serviceAddresses = [
+             "https://basemap.nationalmap.gov/arcgis/services/USGSTopo/MapServer/WMSServer?request=GetCapabilities&service=WMS", 
+             "https://edcintl.cr.usgs.gov/geoserver/qdpreciprd7/wms?service=WMS&request=GetCapabilities", 
+             "https://edcintl.cr.usgs.gov/geoserver/qdprecipcdd7/wms?service=WMS&request=GetCapabilities", 
+             "https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WMSServer?request=GetCapabilities&service=WMS", 
+             "https://landfire.cr.usgs.gov/arcgis/services/Landfire/US_140/MapServer/WMSServer?request=GetCapabilities&service=WMS", 
+             "https://mrdata.usgs.gov/services/mrds?request=getcapabilities&service=WMS&version=1.3.0&", 
+             "https://carto.nationalmap.gov/arcgis/services/structures/MapServer/WMSServer?request=GetCapabilities&service=WMS",
+             "https://mrdata.usgs.gov/services/mrds-commodity?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities"];
+            var titleNames = [["USGS Topo Map"], ["Rain Patterns (7 Days Dynamic)"], ["Dry Patterns (7 Days Dynamic)"], ["Hillshade Gray", "Aspect Degrees", "Aspect Map", "Grey Hillshade Elevation Fill", "Hillshade Multidirectional", "Slope Map", "Slope Degrees", "Hillshade Elevation Tinted", "Height Ellipsoidal", "Contour 25", "Contour 25 Smoothed", "Elevation: None"], ["Disturbance 2013", "Disturbance 2014", "Forest Canopy Bulk Density", "Forest Canopy Base Height", "Existing Vegetation Height", "40 Scott and Burgan Fire Behavior Fuel Models", "13 Anderson Fire Behavior Fuel Models", "Mean Fire Return Interval", "Fire Regime Groups", "Environmental Site Potential", "Biophysical Settings", "Succession Classes", "Forest Canopy Cover", "Existing Vegetation Cover", "Existing Vegetation Type", "Percent Replacement-Severity Fire", "Percent Mixed-Severity Fire", "Percent Low-Severity Fire", "Vegetation Distrubance 2014", "Vegetation Transition Magnitude 2014", "Fuel Distrubance 2014", "Vegetation Condition Class", "Fuel Characteristic Classification System", "Vegetation Departure Index", "Canadian Forest Fire Danger Rating System"], ["Mineral Resources"], ["Visitor/Information Centers", "Trailheads", "Campgrounds", "Schools", "Technical/Trade Schools", "Colleges/Universities", "Prisons/Correctional Facilities", "Police Stations", "Fire Stations/EMS Stations", "Ambulance Services", "Hospitals/Medical Centers", "State Capitol Buildings", "Post Offices", "Cemeteries", "Visitor/Information Centers2", "Trailheads2", "Campgrounds2", "Schools2", "Technical/Trade Schools2", "Colleges/Universities2", "Prisons/Correctional Facilities2", "Police Stations2", "Fire Stations/EMS Stations2", "Ambulance Services2", "Hospitals/Medical Centers2", "State Capitol Buildings2", "Post Offices2", "Cemeteries2"], []];
+            var linkNames = ["USGS Topo Map", "Rain Patterns (7 Days Dynamic)", "Dry Patterns (7 Days Dynamic)", "3D Elevation", "Landfire", "Mineral Resources", "USGS Structures", "MRDS By Commodity"];
+            var funcCode = ["2", "2", "2", "2", "2", "2", "3", "4"];
+            var zoomRequired = ["USGS Topo Map", "Mineral Resources", "Visitor/Information Centers", "Trailheads", "Campgrounds", "Schools", "Technical/Trade Schools", "Colleges/Universities", "Prisons/Correctional Facilities", "Police Stations", "Fire Stations/EMS Stations", "Ambulance Services", "Hospitals/Medical Centers", "State Capitol Buildings", "Post Offices", "Cemeteries"]
+            var skipLegend = ["USGS Topo Map"]
+            var secondaryLayers = [];
+            var metadata = [];
+
+            //https://github.com/NASAWorldWind/WebWorldWind/blob/develop/examples/WMS.js
+            // Multiple variants of this function were necessary because of issues with WMS formatting. Most of... the nationalmap wms files worked with function 2. Some worked better with function 3 or 4. Function 1 was... basically exlusively from the example that this code originally came from.
+            var createWMSLayer = function (xmlDom) {
+                // Create a WmsCapabilities object from the XML DOM
+                var wms = new WorldWind.WmsCapabilities(xmlDom);
+                // Retrieve a WmsLayerCapabilities object by the desired layer name
+                var wmsLayerCapabilities = wms.getNamedLayer(layerName);
+                // Form a configuration object from the WmsLayerCapability object
+                var wmsConfig = WorldWind.WmsLayer.formLayerConfiguration(wmsLayerCapabilities);
+                // Modify the configuration objects title property to a more user friendly title
+                wmsConfig.title = titleName;
+                // Create the WMS Layer from the configuration object
+                var wmsLayer = new WorldWind.WmsLayer(wmsConfig);
+                // Add the layers to WorldWind and update the layer manager
+                wmsLayer.enabled = false;
+                wwd.addLayer(wmsLayer)
+                layers.push({layer: wmsLayer, enabled : false});
+                
+                var legend = document.createElement("IMG");
+                var legendTitle = document.createElement("div")
+
+                legend.setAttribute("src", "https://neo.sci.gsfc.nasa.gov/palettes/modis_lst.png");
+                legend.setAttribute("alt", wmsConfig.title + " Legend");
+
+                legendTitle.setAttribute("id", wmsConfig.title + " Legend");
+                legendTitle.innerHTML = wmsConfig.title + " Legend<br>";
+                legendTitle.style.display = "none";
+
+
+                legendTitle.appendChild(legend);
+                identifyControl.appendChild(legendTitle);
+            };
+
+            var createWMSLayer2 = function (xmlDom) {
+                var wms = new WorldWind.WmsCapabilities(xmlDom);
+                for (var i = 0; i < wms.capability.layers[0].layers.length; i++) {
+                    if (wms.hasOwnProperty("service")) {
+                        if (wms.service.hasOwnProperty("url")) {
+                            var temp = wms.service.url.split("/");
+                            if (temp[0] === "http:") {temp[0] = "http://www."}
+                            metadata.push(temp[0]+temp[1]+temp[2]);
+                        }
+                    }
+                    var wmsLayerCapabilities = wms.getNamedLayer(wms.capability.layers[0].layers[i].name);
+                    var wmsConfig = WorldWind.WmsLayer.formLayerConfiguration(wmsLayerCapabilities);
+                    wmsConfig.title = titleName[i];
+                    var wmsLayer = new WorldWind.WmsLayer(wmsConfig);
+
+                    wmsLayer.displayName = titleName[i];
+                    wmsLayer.enabled = false;
+                    wwd.addLayer(wmsLayer)
+                    layers.push({layer: wmsLayer, enabled : false});
+
+                    if (!skipLegend.includes(wmsConfig.title)) {
+                        var legend = document.createElement("IMG");
+                        var legendTitle = document.createElement("div")
+
+                        legend.setAttribute("src", wms.capability.layers[0].layers[i]._styles[0].legendUrls[0].url);
+                        legend.setAttribute("alt", wmsConfig.title + " Legend");
+
+                        legendTitle.setAttribute("id", wmsConfig.title + " Legend");
+                        legendTitle.innerHTML = wmsConfig.title + " Legend<br>";
+                        legendTitle.style.display = "none";
+
+                        legendTitle.appendChild(legend);
+                        if (identifyControl.innerHTML === "Please Select Layers to Display Legends") {
+                            identifyControl.innerHTML = "";
+                        }
+                        identifyControl.appendChild(legendTitle);
+                    }
+                }
+            };
+            var createWMSLayer3 = function (xmlDom) {
+                var wms = new WorldWind.WmsCapabilities(xmlDom);
+                var index = 0;
+                if (wms.hasOwnProperty("service")) {
+                    if (wms.service.hasOwnProperty("url")) {
+                        var temp = wms.service.url.split("/");
+                        metadata.push(temp[0]+temp[1]+temp[2]);
+                    }
+                }
+                for (var k = 0; k < wms.capability.layers[0].layers.length; k++) {
+                    for (var j = 0; j < wms.capability.layers[0].layers[k].layers.length; j++) {
+                        for (var i = 0; i < wms.capability.layers[0].layers[k].layers[j].layers.length; i++) {
+                            var wmsLayerCapabilities = wms.getNamedLayer(wms.capability.layers[0].layers[k].layers[j].layers[i].name);
+                            var wmsConfig = WorldWind.WmsLayer.formLayerConfiguration(wmsLayerCapabilities);
+                            wmsConfig.title = titleName[index];
+                            var wmsLayer = new WorldWind.WmsLayer(wmsConfig);
+
+                            wmsLayer.displayName = titleName[index];
+                            wmsLayer.enabled = false;
+                            wwd.addLayer(wmsLayer)
+
+                            if (k === 0) {
+                                layers.push({layer: wmsLayer, enabled : false});
+                                var legend = document.createElement("IMG");
+                                var legendTitle = document.createElement("div")
+
+                                legend.setAttribute("src", wms.capability.layers[0].layers[k].layers[j].layers[i]._styles[0].legendUrls[0].url);
+                                legend.setAttribute("alt", wmsConfig.title + " Legend");
+
+                                legendTitle.setAttribute("id", wmsConfig.title + " Legend");
+                                legendTitle.innerHTML = wmsConfig.title + " Legend<br>";
+                                legendTitle.style.display = "none";
+
+
+                                legendTitle.appendChild(legend);
+                                identifyControl.appendChild(legendTitle);
+                            } else {
+                                secondaryLayers.push(wmsLayer.displayName);
+                                secondaryLayers.push(wmsLayer);
+                            }
+                            index = index + 1
+                        }
+                    }
+                }
+            };
+            var createWMSLayer4 = function (xmlDom) {
+                var wms = new WorldWind.WmsCapabilities(xmlDom);
+                for (var i = 0; i < wms.capability.layers[0].layers.length; i++) {
+                    if (wms.hasOwnProperty("service")) {
+                        if (wms.service.hasOwnProperty("url")) {
+                            var temp = wms.service.url.split("/");
+                            if (temp[0] === "http:") {temp[0] = "https:"}
+                            metadata.push(temp[0]+temp[1]+temp[2]);
+                        }
+                    }
+                    var wmsLayerCapabilities = wms.getNamedLayer(wms.capability.layers[0].layers[i].name);
+                    var wmsConfig = WorldWind.WmsLayer.formLayerConfiguration(wmsLayerCapabilities);
+                    titleNames[7].push(wmsConfig.title)
+                    var wmsLayer = new WorldWind.WmsLayer(wmsConfig);
+
+                    wmsLayer.displayName = wmsConfig.title;
+                    wmsLayer.enabled = false;
+                    wwd.addLayer(wmsLayer)
+                    layers.push({layer: wmsLayer, enabled : false});
+
+                    if (!skipLegend.includes(wmsConfig.title)) {
+                        var legend = document.createElement("IMG");
+                        var legendTitle = document.createElement("div")
+
+                        legend.setAttribute("src", wms.capability.layers[0].layers[i]._styles[0].legendUrls[0].url);
+                        legend.setAttribute("alt", wmsConfig.title + " Legend");
+
+                        legendTitle.setAttribute("id", wmsConfig.title + " Legend");
+                        legendTitle.innerHTML = wmsConfig.title + " Legend<br>";
+                        legendTitle.style.display = "none";
+
+                        legendTitle.appendChild(legend);
+                        identifyControl.appendChild(legendTitle);
+                    }
+                }
+            };
+            var logError = function (jqXhr, text, exception) {
+                document.getElementById("retrievalLoader").style.display = "none";
+                alert("Failed to load from external URL.")
+                console.log("There was a failure retrieving the capabilities document: " + text + " exception: " + exception);
+            };
+
+            var deepIncludes = function(arr, item) {
+                for (var i = 0; i < arr.length; i++) {
+                    if (Array.isArray(arr[i])) {
+                        if(deepIncludes(arr[i], item)) {
+                            return true;
+                        }
+                    } else {
+                        if (arr[i] === item) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            // These two builds allow for the metadata to not all be loaded in initially. Instead, the user can grab whichever... pieces of data they want and only worry about waiting through the amortized time that it takes to retrieve it. Also, functionality for a button can be created on the spot this way.
+            var table = null;
+            var buildLayerList = function() {
+                var layerCode = "";
+                layerCode += "<thead><tr><th>Layers</th></tr></thead><tbody style=\"display: block; border: 1px; height: 435px; overflow-y: scroll\">"
+                for (var i = 0; i < layers.length; i++) {
+                    var temp = layers[i].layer.displayName;
+                    if (temp[0] === "\"") {
+                        layers[i].layer.displayName = temp.slice(1, temp.length - 1);
+                    }
+                    //<span class=\"close\" id=\""+layers[i].layer.displayName+" closer\">&times;</span>
+                    layerCode += "<tr id=\"listEl" + i.toString() + "\" style=\"text-align: left; margin-top: 1px; padding-bottom: 5px; padding-left: 5px; background-color: rgba(0,0,0,0); overflow: hidden\"><td style=\"border-color: rgba(0,0,0,0); width: 100%\"><div class=\"btn\" id=\"data-toggle" + i.toString() + "\" style = \"color: white; margin-top: 5px; background-color: rgba(255,255,255,0.1)\">";
+                    layerCode += layers[i].layer.displayName;
+                    layerCode += "</div>";
+                    if (deepIncludes(titleNames, layers[i].layer.displayName)) {
+                        layerCode += "<div style=\"color: black; background-color: rgb(255, 255, 255, 0.9); width: 95%; border-radius: 5px\">";
+                        if (i > 7) {
+                            layerCode += "<center><a href=\""+metadata[i-8]+"\" target=\"_blank\">"+metadata[i-8]+"</a></center>";
+                        }
+                        if (zoomRequired.includes(layers[i].layer.displayName)) {
+                            layerCode += "<center>Layer Changes Upon Zoom</center>";
+                        }
+                        layerCode += "<center style=\"margin-top: 2px; margin-bottom: 10px\">"+layers[i].layer.displayName+" Opacity</center><center><input type=\"range\" min=\"1\" max=\"100\" value=\"100\" class=\"slider\" id=\""+layers[i].layer.displayName+"Slider\" style=\"width: 95%; border-radius: 5px\"></center><br></div>";
+                    }
+                    layerCode += "</td></tr>";
+                }
+                layerCode += "</tbody>"
+                if ($.fn.dataTable.isDataTable('#layerControl')) {
+                    try {
+                        table.destroy();
+                    } catch(e) {
+                        alert(e)
+                    }
+                }
+                document.getElementById("layerControl").innerHTML = layerCode;
+                // TODO: Why was definine onchange only using last value?
+                for (var i = 0; i < layers.length; i++) {
+                    var temp = document.getElementById("data-toggle" + i.toString());
+                    var scriptNode = document.createElement('script');
+                    // document.getElementById(\""+layers[i].layer.displayName+" closer\").onclick = function() {var elem2elim = document.getElementById(\"listEl"+i.toString()+"\");elem2elim.parentNode.removeChild(elem2elim);};
+                    scriptNode.innerHTML = "document.getElementById(\"data-toggle\"+" + i.toString() +").onclick = function() { layers[" + i.toString() + "].layer.enabled = !layers[" + i.toString() + "].layer.enabled; wwd.redraw(); document.getElementById(\"data-toggle\"+" + i.toString() +").style.backgroundColor = (document.getElementById(\"data-toggle\"+" + i.toString() +").style.backgroundColor === \"rgba(183, 28, 28, 0.6)\") ? \"rgba(255,255,255,0.1)\" : \"rgba(183, 28, 28, 0.6)\"; document.getElementById(layers["+i.toString()+"].layer.displayName+\" Legend\").style.display = (document.getElementById(layers["+i.toString()+"].layer.displayName+\" Legend\").style.display === \"none\") ? \"block\" : \"none\"; if(deepIncludes(secondaryLayers, layers["+i.toString()+"].layer.displayName + \"2\")) {secondaryLayers[secondaryLayers.indexOf(layers["+i.toString()+"].layer.displayName + \"2\") + 1].enabled = layers[" + i.toString() + "].layer.enabled; wwd.redraw();} };";
+                    if (!layers[i].layer.hasOwnProperty("renderables") && i > 7) {
+                        scriptNode.innerHTML += "document.getElementById(layers["+i.toString()+"].layer.displayName+\"Slider\").oninput = function() {layers["+i.toString()+"].layer.opacity = this.value/100;};";
+                    }
+                    temp.appendChild(scriptNode);
+                    if (layers[i].layer.enabled) {
+                        document.getElementById("data-toggle"+ i.toString()).style.backgroundColor = "rgba(183, 28, 28, 0.6)";
+                    }
+                }
+                // alert("sanity")
+                // var sortable = Sortable.create(document.getElementById("layerList"), {
+                //     delay: 100,
+                //     onStart: function (evt) {
+                //         evt.oldIndex;
+                //         evt.item.style.backgroundColor = "green"
+                //     },
+                //     onEnd: function (evt) {
+                //         var itemEl = evt.item; 
+                //         evt.to;
+                //         evt.from;
+                //         evt.oldIndex;
+                //         evt.newIndex; 
+                //         evt.item.style.backgroundColor = "rgb(255,255,255,0.1)";
+                //         var item2Shift = layers[evt.oldIndex];
+                //     },
+                // });
+                try {
+                    table = $('#layerControl').DataTable({"bLengthChange": false, "bInfo": false, "pagingType": "full_numbers", "ordering": false});
+                } catch(e) {
+                    alert(e)
+                }
+            };
+
+            buildLayerList();
+
+            var buildRetrievalList = function() {
+                //alert("error")
+                for (var i = 0; i < serviceAddresses.length; i++) {
+                    document.getElementById("retrievalControl").innerHTML += "<ul>"
+                    document.getElementById("retrievalControl").innerHTML += "<li style=\"list-style-type: none; text-align: left\"><div class=\"btn\" id=\""+linkNames[i]+"\" style = \"color: white; overflow: hidden; margin-top: 5px; background-color: rgba(255,255,255,0.1)\">"+linkNames[i]+"</li>";
+                }
+                document.getElementById("retrievalControl").innerHTML += "</ul>"
+                for (var i = 0; i < serviceAddresses.length; i++) {
+                    var temp = document.getElementById(linkNames[i]);
+                    var scriptNode = document.createElement('script');
+                    var codedFunc = "";
+                    if (funcCode[i] === "1") {
+                        codedFunc = "createWMSLayer";
+                    } else if (funcCode[i] === "2") {
+                        codedFunc = "createWMSLayer2";
+                    } else if (funcCode[i] === "3") {
+                        codedFunc = "createWMSLayer3";
+                    } else {
+                        codedFunc = "createWMSLayer4";
+                    }
+                    scriptNode.innerHTML = "document.getElementById(\""+linkNames[i]+"\").onclick = function() { document.getElementById(\"retrievalLoader\").style.display = \"block\"; titleName = titleNames["+i.toString()+"]; var promise = $.get(\""+serviceAddresses[i]+"\").done("+codedFunc+").fail(logError); promise.then(function() {buildLayerList(); document.getElementById(\"retrievalLoader\").style.display = \"none\"; }); document.getElementById(\""+linkNames[i]+"\").style.display = \"none\";};";
+                    temp.appendChild(scriptNode);
+                }
+            };
+            buildRetrievalList();
+        </script>
+    </body>
+</html>
