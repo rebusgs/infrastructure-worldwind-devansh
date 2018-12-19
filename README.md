@@ -23,7 +23,9 @@ http://prd-tnm.s3.amazonaws.com/test/infrastructure/index.html
 
 # Credits
 Beta Created by: Devansh Raizada Vaid, _devanshvaid@berkeley.edu_
+
 Under the Employment of: Jonathan Stock, _jstock@usgs.gov_
+
 With Assistance From:
 - Amber Wittner, _awittner@usgs.gov_
 - Rick Brown, _reb@usgs.gov_
