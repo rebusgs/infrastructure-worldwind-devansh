@@ -21,6 +21,8 @@ http://prd-tnm.s3.amazonaws.com/test/infrastructure/index.html
 
 -Implement new Layer Toggle features that optimize the user experience when working with multiple layers simultaneously.
 
+-Include GeoCode search functionality.
+
 # Credits
 Beta Created by: Devansh Raizada Vaid, _devanshvaid@berkeley.edu_
 
