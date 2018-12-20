@@ -1,5 +1,5 @@
 # USGS Visualization Portal
-A beta of the USGS WorldWind visualization project. This repository provides users access to various existing data sets hosted online and allows them to project these data simultaneously onto NASA's open-source 3D globe (NASA WorldWind).
+A beta of the USGS WorldWind visualization project. This tool, built using the WorldWind Platform, provides users access to various existing data sets hosted online and allows them to display these data simultaneously onto an open-source 3D globe. Similar in nature to NASA WorldWind.
 
 # Hosting
 Project is currently hosted at: 
